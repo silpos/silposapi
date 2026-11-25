@@ -16,8 +16,13 @@ app.use(function (req, res, next) {
 var path = require('path');
 //middlewares
 
-app.use(express.json());
-app.use(express.urlencoded({extended:false}));
+// Este es el archivo que arranca Passenger (no src/index.js). Con el limite por defecto de
+// express.json() (100 KB), un celular con muchas ventas acumuladas recibia 413 en /backupventas.
+app.use(express.json({limit: '50mb'}));
+app.use(express.urlencoded({extended:false, limit: '50mb'}));
+
+// Cierra al terminar cada peticion las conexiones MySQL que abran los controladores.
+app.use(require('./src/functions/cerrarConexiones').cerrarConexiones);
 
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
