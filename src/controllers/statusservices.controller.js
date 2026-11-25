@@ -4,7 +4,6 @@ const mysql = require('../config/database').mysql_pool;
 const statusServices = (req,res) => {
     try {
         var token = req.headers['authorization']
-        var businessId = req.headers['Company'];
         if(!token){
             res.status(401).send({
               error: "Es necesario el token de autenticación",
@@ -23,17 +22,27 @@ const statusServices = (req,res) => {
             })
           } else {
 
-            mysql.getConnection(function (err, connection) {
-                connection.query('SELECT * FROM empresas WHERE id =?',[businessId], function(err, rows, fields) {
-                    if (err) throw err;
-                    res.status(200).json(
-                        {
-                            status:true,
-                            database:true,
-                            codeerror:false,
-                        }
-                    );
+            // Solo comprueba que la base de master responde (el resultado nunca se uso: el
+            // header llega en minusculas y 'Company' siempre venia vacio). pool.query devuelve
+            // la conexion al pool; con getConnection() se quedaba tomada y, gastadas las 10,
+            // la APK se quedaba "verificando estado de la empresa" sin fin.
+            mysql.query('SELECT 1', function(err) {
+                if (err) {
+                  console.error('[statusservices]', err.code || err);
+                  res.status(200).json({
+                    status:false,
+                    database:false,
+                    codeerror:500,
                   });
+                  return;
+                }
+                res.status(200).json(
+                    {
+                        status:true,
+                        database:true,
+                        codeerror:false,
+                    }
+                );
               });
           }
         })

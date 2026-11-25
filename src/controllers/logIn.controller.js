@@ -8,8 +8,8 @@ const authSocketToken = async (req, res) => {
 
     var auth = false;
 
-    mysql.getConnection(function (err, connection) {
-      connection.query(
+    // pool.query toma y devuelve la conexion al pool (con getConnection() nunca se devolvia).
+    mysql.query(
         'SELECT * FROM company_user cu, usuarios u WHERE u.email = ? AND u.pass = ? AND cu.user_id = u.id AND cu.activo = 1',
         [username, password],
         function (err, result, fields) {
@@ -23,8 +23,12 @@ const authSocketToken = async (req, res) => {
             const dataEmpresas = new Array();
 
             console.log(result[0].id);
-            mysql.getConnection(function (err, connection) {
-              connection.query('SELECT * FROM company_user cu INNER JOIN empresas e ON cu.company_id = e.id WHERE cu.user_id = ?',[result[0].id],function (err, business, fields) {
+              mysql.query('SELECT * FROM company_user cu INNER JOIN empresas e ON cu.company_id = e.id WHERE cu.user_id = ?',[result[0].id],function (err, business, fields) {
+                if (err) {
+                  console.error('[login]', err.code || err);
+                  res.status(500).send({ status: false, error: "No se pudo consultar las empresas del usuario" });
+                  return;
+                }
                 dataEmpresas.push(business);
                   auth = true;
                   var tokenData = {
@@ -36,8 +40,6 @@ const authSocketToken = async (req, res) => {
                     expiresIn: (60 * 60 * 24)*30, // expires in 24 hours
                   });
 
-                  console.log(dataEmpresas[0]);
-
                   res.send({
                     status: true,
                     token: token,
@@ -48,7 +50,6 @@ const authSocketToken = async (req, res) => {
                   return;
                 }
               );
-            });
           } else {
             res.status(401).send({
               error: "usuario o contraseña inválidos",
@@ -56,8 +57,7 @@ const authSocketToken = async (req, res) => {
             return;
           }
         }
-      );
-    });
+    );
   } catch (e) {
     res.status(200).json({ status: false, error: e });
   }

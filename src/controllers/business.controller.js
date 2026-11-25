@@ -18,11 +18,15 @@ const getBusiness = async (req,res)=>{
               error: 'Token inválido'
             })
           } else {
-            mysql.getConnection(function (err, connection) {
-                connection.query('SELECT * FROM empresas WHERE id = ?',[businessId], function(err, rows, fields) {
-                    if (err) throw err;
-                    res.status(200).json({data:rows,status:true});
-                  });
+            // pool.query toma y devuelve la conexion al pool; con getConnection() nunca se
+            // devolvia y, gastadas las 10 del pool, la APK se quedaba "verificando" sin fin.
+            mysql.query('SELECT * FROM empresas WHERE id = ?',[businessId], function(err, rows, fields) {
+                if (err) {
+                  console.error('[empresa]', err.code || err);
+                  res.status(500).json({data:false,status:false,codeerror:500});
+                  return;
+                }
+                res.status(200).json({data:rows,status:true});
               });
           }
         })
@@ -62,7 +66,11 @@ try {
           
               connection.connect();
                 connection.query('SELECT * FROM clientes', function(err, rows, fields) {
-                    if (err) throw err;
+                    if (err) {
+                      console.error('[tipos_consultas]', err.code || err);
+                      res.status(500).json({data:false,status:false,codeerror:500});
+                      return;
+                    }
                     res.status(200).json({data:rows,status:true,codeerror:false});
                   });
             

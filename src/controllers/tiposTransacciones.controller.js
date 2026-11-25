@@ -31,7 +31,11 @@ const getTiposTransacciones = async (req, res) => {
           connection.query(
             "SELECT * FROM tipos_transaccion WHERE activo = 1",
             function (err, rows, fields) {
-              if (err) throw err;
+              if (err) {
+                console.error('[tipos_transacciones]', err.code || err);
+                res.status(500).json({ data: false, status: false, codeerror: 500 });
+                return;
+              }
               res.status(200).json({ data: rows, status: true });
             }
           );

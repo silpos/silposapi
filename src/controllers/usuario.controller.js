@@ -19,12 +19,14 @@ const getUsers = async (req, res) => {
               error: 'Token inválido'
             })
           } else {
-            mysql.getConnection(function (err, connection) {
-                connection.query('SELECT * FROM usuarios', function(err, rows, fields) {
-                    if (err) throw err;
-                    res.status(200).json({data:rows,status:true});
-                  });
-            });
+            mysql.query('SELECT * FROM usuarios', function(err, rows, fields) {
+                if (err) {
+                  console.error('[users]', err.code || err);
+                  res.status(500).json({data:false,status:false});
+                  return;
+                }
+                res.status(200).json({data:rows,status:true});
+              });
           }
         })
     } catch (error) {
@@ -51,12 +53,14 @@ const getUsersById = async(req,res)=>{
           error: 'Token inválido'
         })
       } else {
-        mysql.getConnection(function (err, connection) {
-            connection.query('SELECT * FROM usuarios WHERE id = '+id, function(err, rows, fields) {
-                if (err) throw err;
-                res.status(200).json({data:rows,status:true});
-              });
-        });
+        mysql.query('SELECT * FROM usuarios WHERE id = ?', [id], function(err, rows, fields) {
+            if (err) {
+              console.error('[users/:id]', err.code || err);
+              res.status(500).json({data:false,status:false});
+              return;
+            }
+            res.status(200).json({data:rows,status:true});
+          });
       }
     })
 } catch (error) {

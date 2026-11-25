@@ -26,15 +26,29 @@ const backupventas = async (req,res)=>{
               password: req.headers['dbp'],
               database: req.headers['dbd'],
             });
-            var dictstring = JSON.stringify(data);          
-         connection.connect(function(err) {
-                    if (err) throw err;
-                    var sql = "INSERT INTO backup_ventas_movil (response, status) VALUES ('"+dictstring+"','1')";
-                    connection.query(sql, function (err, result) {
-                      if (err) throw err;
-                      res.status(200).json({data:result,status:true});
-                    });
-           });
+            var dictstring = JSON.stringify(data);
+            // Antes el JSON iba pegado dentro del SQL (un apostrofo en un producto o cliente lo
+            // rompia) y cualquier error se lanzaba con throw dentro del callback: nadie lo
+            // atrapaba y se caia el proceso Node completo, con todas las peticiones de todos los
+            // clientes. Pasaba siempre en las empresas cuya base no tiene backup_ventas_movil
+            // (casi todas). Ahora el valor va como parametro y el error se responde.
+            var fallo = function (etapa, err) {
+              console.error('[backupventas] ' + etapa + ' bd=' + req.headers['dbd'] + ':', err && err.code ? err.code : err);
+              res.status(200).json({data:false,status:false,codeerror:(err && err.code) ? err.code : 500});
+            };
+            connection.connect(function(err) {
+              if (err) {
+                fallo('conexion', err);
+                return;
+              }
+              connection.query("INSERT INTO backup_ventas_movil (response, status) VALUES (?, '1')", [dictstring], function (err, result) {
+                if (err) {
+                  fallo('insert', err);
+                  return;
+                }
+                res.status(200).json({data:result,status:true});
+              });
+            });
 	 //res.status(200).json({status:dictstring});
           }
         })
