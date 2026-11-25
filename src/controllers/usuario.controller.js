@@ -1,3 +1,6 @@
+// Nunca devolver la contrasena de los usuarios en un listado.
+const sinClave = (filas) => Array.isArray(filas) ? filas.map(function (f) { const c = Object.assign({}, f); delete c.pass; delete c.password; return c; }) : filas;
+const JWT_SECRETO = require("../config/jwt");
 const mysql = require('../config/database').mysql_pool;
 const jwt = require('jsonwebtoken');
 
@@ -13,7 +16,7 @@ const getUsers = async (req, res) => {
       
         token = token.replace('Bearer ', '')
       
-        jwt.verify(token, 'Secret Password', function(err, user) {
+        jwt.verify(token, JWT_SECRETO, function(err, user) {
           if (err) {
             res.status(401).send({
               error: 'Token inválido'
@@ -25,7 +28,7 @@ const getUsers = async (req, res) => {
                   res.status(500).json({data:false,status:false});
                   return;
                 }
-                res.status(200).json({data:rows,status:true});
+                res.status(200).json({data:sinClave(rows),status:true});
               });
           }
         })
@@ -47,7 +50,7 @@ const getUsersById = async(req,res)=>{
   
     token = token.replace('Bearer ', '')
   
-    jwt.verify(token, 'Secret Password', function(err, user) {
+    jwt.verify(token, JWT_SECRETO, function(err, user) {
       if (err) {
         res.status(401).send({
           error: 'Token inválido'
@@ -59,7 +62,7 @@ const getUsersById = async(req,res)=>{
               res.status(500).json({data:false,status:false});
               return;
             }
-            res.status(200).json({data:rows,status:true});
+            res.status(200).json({data:sinClave(rows),status:true});
           });
       }
     })

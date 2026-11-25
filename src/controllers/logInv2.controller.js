@@ -1,3 +1,4 @@
+const JWT_SECRETO = require("../config/jwt");
 const { masterConnection } = require("../functions/connectionParams");
 var mysql = require("mysql");
 const jwt = require("jsonwebtoken");
@@ -33,7 +34,7 @@ const authLogin = async (req, res) => {
             documento_representante: company[0].documento_representante
           };
 
-          var token = jwt.sign(tokenData, "Secret Password", {
+          var token = jwt.sign(tokenData, JWT_SECRETO, {
             expiresIn: (60 * 60 * 24)*30,
           });
 

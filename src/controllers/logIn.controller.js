@@ -1,3 +1,4 @@
+const JWT_SECRETO = require("../config/jwt");
 const jwt = require("jsonwebtoken");
 const mysql = require("../config/database").mysql_pool;
 
@@ -36,7 +37,7 @@ const authSocketToken = async (req, res) => {
                     // ANY DATA
                   };
 
-                  var token = jwt.sign(tokenData, "Secret Password", {
+                  var token = jwt.sign(tokenData, JWT_SECRETO, {
                     expiresIn: (60 * 60 * 24)*30, // expires in 24 hours
                   });
 
@@ -72,7 +73,7 @@ const checkAuthStates = async (req, res) => {
     return
   }
   token = token.replace('Bearer ', '')
-  jwt.verify(token, 'Secret Password', function(err, user) {
+  jwt.verify(token, JWT_SECRETO, function(err, user) {
     if (err) {
       res.status(401).send({data:{
         message: "Usuario inválido"

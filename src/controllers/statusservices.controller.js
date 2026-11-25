@@ -1,3 +1,4 @@
+const JWT_SECRETO = require("../config/jwt");
 const jwt = require('jsonwebtoken');
 const mysql = require('../config/database').mysql_pool;
 
@@ -13,7 +14,7 @@ const statusServices = (req,res) => {
             return
         }
         token = token.replace('Bearer ', '')
-        jwt.verify(token, 'Secret Password', function(err, user) {
+        jwt.verify(token, JWT_SECRETO, function(err, user) {
           if (err) {
             res.status(401).send({
               error: 'Token inválido',
