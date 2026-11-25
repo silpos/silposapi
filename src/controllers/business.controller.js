@@ -38,8 +38,13 @@ const getBusiness = async (req,res)=>{
                   return;
                 }
                 if (!rows || rows.length === 0) {
-                  console.error('[empresa] negada bsnid=' + businessId + ' usuario=' + (idUsuario || emailUsuario));
-                  res.status(403).json({data:[],status:false,codeerror:403});
+                  // La APK pide /empresa con bsnid=0 al verificar el estado y siempre recibio
+                  // {data:[],status:true}; con un 403 se queda "verificando" sin fin. Se responde
+                  // igual que antes: vacio, sin datos de ninguna empresa.
+                  if (Number(businessId) > 0) {
+                    console.error('[empresa] sin acceso bsnid=' + businessId + ' usuario=' + (idUsuario || emailUsuario));
+                  }
+                  res.status(200).json({data:[],status:true});
                   return;
                 }
                 res.status(200).json({data:rows,status:true});
