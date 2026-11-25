@@ -24,7 +24,10 @@ const authSocketToken = async (req, res) => {
             const dataEmpresas = new Array();
 
             console.log(result[0].id);
-              mysql.query('SELECT * FROM company_user cu INNER JOIN empresas e ON cu.company_id = e.id WHERE cu.user_id = ?',[result[0].id],function (err, business, fields) {
+              // empresas tambien tiene una columna company_id (vale 0 en todas) y con SELECT * pisaba
+              // la de company_user: la APK recibia company_id = 0, pedia /empresa con bsnid=0 y se
+              // quedaba "verificando estado de la empresa". El alias al final deja el id real.
+              mysql.query('SELECT *, cu.company_id AS company_id FROM company_user cu INNER JOIN empresas e ON cu.company_id = e.id WHERE cu.user_id = ?',[result[0].id],function (err, business, fields) {
                 if (err) {
                   console.error('[login]', err.code || err);
                   res.status(500).send({ status: false, error: "No se pudo consultar las empresas del usuario" });
